@@ -17,6 +17,8 @@ crop-disease-js/frontend/android/.git/
 # Python - Virtual Environment
 # =============================================
 crop-disease-python/venv/
+crop-disease-python/venv310/
+crop-disease-python/venv312/
 *.pyc
 __pycache__/
 *.py[cod]

@@ -6,27 +6,23 @@ import re
 import numpy as np
 import json
 
-# Keras
+import keras
 from keras.models import load_model
 from keras.preprocessing import image
 
-# Flask utils
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import base64
 
-# Define a flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
 MODEL_PATH = 'Model.hdf5'
 
-# Load your trained model
 print(" ** Model Loading **")
 model = load_model(MODEL_PATH)
 print(" ** Model Loaded **")
-model._make_predict_function()
 
 # Create uploads directory if it doesn't exist
 if not os.path.exists('uploads'):
