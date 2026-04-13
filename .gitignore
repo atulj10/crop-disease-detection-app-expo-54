@@ -1,0 +1,152 @@
+# =============================================
+# Root-level .gitignore for crop-disease project
+# =============================================
+
+# =============================================
+# Git (nested repos - we use single root git)
+# =============================================
+crop-disease-python/.git/
+crop-disease-python/.gitignore
+crop-disease-js/.git/
+crop-disease-js/.gitignore
+crop-disease-js/backend/.git/
+crop-disease-js/frontend/.git/
+crop-disease-js/frontend/android/.git/
+
+# =============================================
+# Python - Virtual Environment
+# =============================================
+crop-disease-python/venv/
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+ MANIFEST
+
+# =============================================
+# Python - Jupyter
+# =============================================
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# =============================================
+# Python - ML Model (large binary)
+# =============================================
+crop-disease-python/Model.hdf5
+
+# =============================================
+# Python - Environment variables
+# =============================================
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# =============================================
+# Node.js - Dependencies
+# =============================================
+crop-disease-js/backend/node_modules/
+crop-disease-js/frontend/node_modules/
+
+# =============================================
+# Node.js - Logs
+# =============================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# =============================================
+# Node.js - Build outputs
+# =============================================
+crop-disease-js/frontend/.expo/
+crop-disease-js/frontend/dist/
+crop-disease-js/frontend/web-build/
+crop-disease-js/frontend/android/build/
+crop-disease-js/frontend/android/app/build/
+crop-disease-js/frontend/ios/
+*.jsbundle
+*.bundle.js
+
+# =============================================
+# Node.js - Environment variables
+# =============================================
+crop-disease-js/backend/.env
+crop-disease-js/frontend/.env
+crop-disease-js/frontend/.env.local
+.env.local
+.env.*.local
+
+# =============================================
+# Native/Android
+# =============================================
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.gradle/
+local.properties
+*.iml
+*.hprof
+.cxx/
+android/app/src/main/assets/index.android.bundle
+
+# =============================================
+# Metro
+# =============================================
+.metro-health-check*
+
+# =============================================
+# TypeScript
+# =============================================
+*.tsbuildinfo
+react-native.config.js
+
+# =============================================
+# OS Files
+# =============================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# =============================================
+# IDE
+# =============================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# =============================================
+# Uploads (temporary files)
+# =============================================
+crop-disease-python/uploads/*
+!crop-disease-python/uploads/.gitkeep
+crop-disease-js/backend/uploads/*
+!crop-disease-js/backend/uploads/.gitkeep
+
+# =============================================
+# Expo
+# =============================================
+expo-env.d.ts
