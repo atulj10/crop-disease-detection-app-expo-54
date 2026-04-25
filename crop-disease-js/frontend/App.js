@@ -92,49 +92,49 @@ export default function App() {
     try {
       setLoading(true);
 
-      const formData = new FormData();
-      formData.append("image", {
-        uri: image.uri,
-        name: "crop.jpg",
-        type: "image/jpeg",
-      });
+const formData = new FormData();
+        formData.append("image", {
+          uri: image.uri,
+          name: "crop.jpg",
+          type: "image/jpeg",
+        });
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 45000);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-      const response = await fetch(`${BASE_URL}/detect-disease`, {
-        method: "POST",
-        body: formData,
-        signal: controller.signal,
-      });
+        const response = await fetch(`${BASE_URL}/detect-disease?lang=${i18n.locale}`, {
+          method: "POST",
+          body: formData,
+          signal: controller.signal,
+        });
 
-      clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success === false) {
+          throw new Error(data.error || "Detection failed");
+        }
+        
+        setResult(data);
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          Alert.alert(i18n.t('app.title'), i18n.t('alerts.timeout'));
+        } else {
+          Alert.alert(
+            i18n.t('app.title'), 
+            err.message || i18n.t('alerts.analysisFailed')
+          );
+        }
+        setResult(null);
+      } finally {
+        setLoading(false);
       }
-
-      const data = await response.json();
-      
-      if (data.success === false) {
-        throw new Error(data.error || "Detection failed");
-      }
-      
-      setResult(data);
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        Alert.alert(i18n.t('app.title'), i18n.t('alerts.timeout'));
-      } else {
-        Alert.alert(
-          i18n.t('app.title'), 
-          err.message || i18n.t('alerts.analysisFailed')
-        );
-      }
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   const openProductLink = async (url) => {
     try {

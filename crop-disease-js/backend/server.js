@@ -3,8 +3,9 @@ import cors from "cors";
 import multer from "multer";
 import fs from "fs";
 import axios from "axios";
-import FormData from "form-data";
 import dotenv from "dotenv";
+import FormData from "form-data";
+import { similaritySearch, searchWeb, combineWithGroq } from "./assistant.js";
 
 dotenv.config();
 
@@ -19,10 +20,15 @@ app.get("/health", (req, res) => {
   res.json({
     status: "healthy",
     server: "Plant Disease Detection API",
-    version: "1.0.0",
+    version: "2.0.0",
     endpoints: {
       "POST /detect-disease": "Upload plant image for disease detection",
       "GET /health": "Health check endpoint"
+    },
+    services: {
+      tavily: !!process.env.TAVILY_API_KEY,
+      pinecone: !!process.env.PINECONE_API_KEY,
+      groq: !!process.env.GROQ_API_KEY
     }
   });
 });
@@ -67,6 +73,10 @@ app.post("/detect-disease", upload.single("image"), async (req, res) => {
     const { crop, disease, confidence } = mlResponse.data;
     console.log(`🌱 Detected: ${crop} - ${disease} (${(confidence * 100).toFixed(1)}%)`);
 
+    // Get preferred language from query param (default: en)
+    const lang = req.query.lang || 'en';
+    console.log(`🌐 Preferred language: ${lang}`);
+
     // Check if plant is healthy
     const isHealthy = disease.toLowerCase().includes('healthy');
 
@@ -79,128 +89,53 @@ app.post("/detect-disease", upload.single("image"), async (req, res) => {
     }
 
     /* ===============================
-       2️⃣ Ask Gemini for explanation + product links + articles
+       2️⃣ Get RAG info from Pinecone Assistant
        =============================== */
-    const geminiPrompt = isHealthy 
-      ? `
-You are an agricultural expert.
-
-Plant/Crop: ${crop}
-Status: HEALTHY
-Confidence: ${(confidence * 100).toFixed(1)}%
-
-The plant is healthy! Provide growth optimization information.
-
-Respond ONLY in raw JSON (no markdown, no backticks):
-{
-  "description": "Positive message about the healthy plant and general care tips for ${crop}",
-  "growth_tips": ["tip 1 for better growth", "tip 2 for better growth", "tip 3 for better growth"],
-  "recommended_products": [
-    {
-      "title": "Product name for growth enhancement",
-      "url": "https://direct-link-to-product.com"
-    }
-  ],
-  "articles": [
-    {
-      "title": "Article title about ${crop} cultivation",
-      "url": "https://direct-link-to-article.com"
-    }
-  ]
-}
-
-Important: 
-- Focus on growth optimization, fertilizers, and best practices
-- Provide 3-5 relevant products for better growth (fertilizers, nutrients, growth promoters)
-- Provide 3-4 educational articles about ${crop} cultivation and care
-- All URLs should be real, direct links from agricultural e-commerce sites (Amazon, Flipkart, BigHaat, AgroStar) and agricultural blogs/sites
-      `
-      : `
-You are an agricultural expert.
-
-Plant/Crop: ${crop}
-Disease detected: ${disease}
-Confidence: ${(confidence * 100).toFixed(1)}%
-
-Respond ONLY in raw JSON (no markdown, no backticks):
-{
-  "description": "Brief description of the disease and how it affects ${crop}",
-  "prevention": ["prevention tip 1", "prevention tip 2", "prevention tip 3"],
-  "recommended_products": [
-    {
-      "title": "Product name for treatment",
-      "url": "https://direct-link-to-product.com"
-    }
-  ],
-  "articles": [
-    {
-      "title": "Article title about treating ${disease}",
-      "url": "https://direct-link-to-article.com"
-    }
-  ]
-}
-
-Important: 
-- For recommended_products, provide real, direct product links for treating ${disease} in ${crop}
-- Provide 3-5 relevant treatment products (fungicides, pesticides, organic solutions)
-- Provide 3-4 educational articles about ${disease} and its treatment
-- All URLs should be real, direct links from agricultural e-commerce sites (Amazon, Flipkart, BigHaat, AgroStar) and agricultural blogs/educational sites
-      `;
-
-    let geminiData = {
-      description: "",
-      prevention: [],
-      growth_tips: [],
-      recommended_products: [],
-      articles: []
-    };
-
-    // Check if Gemini API key is available
-    if (process.env.GEMINI_API_KEY) {
-      console.log("🤖 Calling Gemini API for additional information...");
-      try {
-        const geminiResponse = await axios.post(
-          `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
-          {
-            contents: [
-              {
-                role: "user",
-                parts: [{ text: geminiPrompt }],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 1000,
-            },
-          },
-          {
-            headers: { "Content-Type": "application/json" },
-            timeout: 15000 // 15 second timeout for Gemini
-          }
-        );
-
-        let text = geminiResponse.data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) {
-          text = text.replace(/```json|```/g, "").trim();
-          try {
-            geminiData = JSON.parse(text);
-            console.log("✅ Gemini response processed successfully");
-          } catch (parseError) {
-            console.warn("⚠️ Failed to parse Gemini response as JSON, using fallback");
-            geminiData = getFallbackData(crop, disease, isHealthy);
-          }
-        }
-      } catch (geminiError) {
-        console.warn("⚠️ Gemini API call failed, using fallback data:", geminiError);
-        geminiData = getFallbackData(crop, disease, isHealthy);
-      }
-    } else {
-      console.log("ℹ️ No Gemini API key found, using fallback data");
-      geminiData = getFallbackData(crop, disease, isHealthy);
-    }
-
+    const searchQuery = isHealthy 
+      ? `healthy ${crop} plant care and maintenance tips`
+      : `${disease} in ${crop} plants symptoms treatment prevention`;
+    
+    console.log("🔍 Running similarity search on Pinecone Assistant...");
+    const ragResult = await similaritySearch(searchQuery);
+    
     /* ===============================
-       3️⃣ Final response to app
+       3️⃣ Search web for products and articles
+       =============================== */
+    const webQuery = isHealthy 
+      ? `best fertilizers growth promoters for ${crop} plants Amazon Flipkart`
+      : `best fungicides treatments for ${disease} in ${crop} plants Amazon Flipkart`;
+    
+    console.log("🔍 Searching web for products and articles...");
+    const webResults = await searchWeb(webQuery);
+    
+    let searchResults = { products: [], articles: [] };
+    if (webResults && webResults.length > 0) {
+      searchResults.products = webResults
+        .filter(r => r.url?.includes('amazon') || r.url?.includes('flipkart') || r.url?.includes('bighaat'))
+        .slice(0, 5)
+        .map(r => ({ title: r.title, url: r.url }));
+      
+      searchResults.articles = webResults
+        .filter(r => !r.url?.includes('amazon') && !r.url?.includes('flipkart'))
+        .slice(0, 3)
+        .map(r => ({ title: r.title, url: r.url }));
+    }
+    
+    /* ===============================
+       4️⃣ Combine RAG + Web results using Groq
+       =============================== */
+    console.log("🤖 Combining results with Groq Llama...");
+    const combinedResult = await combineWithGroq(
+      ragResult.content,
+      webResults,
+      crop,
+      disease,
+      isHealthy,
+      lang
+    );
+    
+    /* ===============================
+       5️⃣ Final response to app
        =============================== */
     const response = {
       success: true,
@@ -208,7 +143,8 @@ Important:
       disease,
       confidence,
       isHealthy,
-      ...geminiData,
+      lang,
+      ...combinedResult,
       timestamp: new Date().toISOString()
     };
 
@@ -366,7 +302,9 @@ app.listen(PORT, HOST, () => {
   console.log(`🚀 Node.js Server running on http://${HOST}:${PORT}`);
   console.log(`🔍 Health check: http://${HOST}:${PORT}/health`);
   console.log(`📤 Upload endpoint: POST http://${HOST}:${PORT}/detect-disease`);
-  console.log(`🤖 Gemini API: ${process.env.GEMINI_API_KEY ? "Configured" : "Not configured"}`);
+  console.log(`🔍 Tavily Search: ${process.env.TAVILY_API_KEY ? "Configured" : "Not configured (using fallback)"}`);
+  console.log(`🧠 Pinecone RAG: ${process.env.PINECONE_API_KEY ? "Configured" : "Not configured"}`);
+  console.log(`🤖 Groq Combine: ${process.env.GROQ_API_KEY ? "Configured" : "Not configured (using fallback)"}`);
   console.log(`🌱 Make sure Flask ML API is running on http://127.0.0.1:6000`);
 });
 

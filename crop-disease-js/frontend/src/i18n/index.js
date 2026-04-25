@@ -1,20 +1,14 @@
 import { I18n } from 'i18n-js';
 import en from './translations/en';
-import es from './translations/es';
-import fr from './translations/fr';
-import zh from './translations/zh';
-import ja from './translations/ja';
-import ko from './translations/ko';
 import hi from './translations/hi';
+import mr from './translations/mr';
+import te from './translations/te';
 
 const i18n = new I18n({
   en,
-  es,
-  fr,
-  zh,
-  ja,
-  ko,
   hi,
+  mr,
+  te,
 });
 
 i18n.defaultLocale = 'en';
