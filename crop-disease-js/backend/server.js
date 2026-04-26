@@ -43,8 +43,10 @@ app.post("/detect-disease", upload.single("image"), async (req, res) => {
       });
     }
 
+    const targetLang = req.query.lang || 'en';
     console.log(`📤 Received image: ${req.file.originalname || req.file.filename}`);
     console.log(`📁 Temporary path: ${req.file.path}`);
+    console.log(`🌐 Target language for web search: ${targetLang}`);
 
     /* ===============================
        1️⃣ Send image → Flask ML API
@@ -101,9 +103,17 @@ app.post("/detect-disease", upload.single("image"), async (req, res) => {
     /* ===============================
        3️⃣ Search web for products and articles
        =============================== */
+    const langMap = {
+      'hi': 'Hindi',
+      'mr': 'Marathi',
+      'te': 'Telugu',
+      'en': 'English'
+    };
+    const langName = langMap[targetLang] || 'English';
+    
     const webQuery = isHealthy 
-      ? `best fertilizers growth promoters for ${crop} plants Amazon Flipkart`
-      : `best fungicides treatments for ${disease} in ${crop} plants Amazon Flipkart`;
+      ? `best fertilizers growth promoters for ${crop} plants ${langName} Amazon Flipkart India`
+      : `best fungicides treatments for ${disease} in ${crop} plants ${langName} Amazon Flipkart India`;
     
     console.log("🔍 Searching web for products and articles...");
     const webResults = await searchWeb(webQuery);

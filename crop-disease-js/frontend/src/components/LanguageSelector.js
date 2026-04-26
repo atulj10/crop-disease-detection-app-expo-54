@@ -10,14 +10,17 @@ const LANGUAGES = [
   { code: 'te', name: 'తెలుగు', flag: '🇮🇳' },
 ];
 
-const LanguageSelector = () => {
+const LanguageSelector = ({ onLanguageChange }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
   const currentLanguage = LANGUAGES.find(lang => lang.code === i18n.locale) || LANGUAGES[0];
 
-  const handleLanguageChange = (langCode) => {
+  const handleLanguageChangeFn = (langCode) => {
     i18n.locale = langCode;
     setModalVisible(false);
+    if (onLanguageChange) {
+      onLanguageChange();
+    }
   };
 
   return (
@@ -51,7 +54,7 @@ const LanguageSelector = () => {
                   styles.languageOption,
                   i18n.locale === lang.code && styles.selectedOption
                 ]}
-                onPress={() => handleLanguageChange(lang.code)}
+                onPress={() => handleLanguageChangeFn(lang.code)}
               >
                 <Text style={styles.optionFlag}>{lang.flag}</Text>
                 <Text style={[

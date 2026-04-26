@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -22,6 +22,69 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [selectingImage, setSelectingImage] = useState(false);
   const [result, setResult] = useState(null);
+  const [originalResult, setOriginalResult] = useState(null);
+  const [languageChanged, setLanguageChanged] = useState(0);
+
+  const translateText = async (text, targetLang) => {
+    if (targetLang === 'en' || !text) return text;
+    try {
+      const response = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`
+      );
+      const data = await response.json();
+      return data.responseData?.translatedText || text;
+    } catch {
+      return text;
+    }
+  };
+
+  const translateResults = async (data, targetLang) => {
+    if (targetLang === 'en' || !data) return data;
+    
+    const translated = { ...data };
+    
+    if (translated.crop) {
+      translated.crop = await translateText(translated.crop, targetLang);
+    }
+    
+    if (translated.disease) {
+      translated.disease = await translateText(translated.disease, targetLang);
+    }
+    
+    if (translated.description) {
+      translated.description = await translateText(translated.description, targetLang);
+    }
+    
+    if (translated.treatment && Array.isArray(translated.treatment)) {
+      translated.treatment = await Promise.all(
+        translated.treatment.map(item => translateText(item, targetLang))
+      );
+    }
+    
+    if (translated.prevention && Array.isArray(translated.prevention)) {
+      translated.prevention = await Promise.all(
+        translated.prevention.map(item => translateText(item, targetLang))
+      );
+    }
+    
+    if (translated.growth_tips && Array.isArray(translated.growth_tips)) {
+      translated.growth_tips = await Promise.all(
+        translated.growth_tips.map(item => translateText(item, targetLang))
+      );
+    }
+    
+    return translated;
+  };
+
+  useEffect(() => {
+    if (originalResult && languageChanged > 0) {
+      translateResults(originalResult, i18n.locale).then(setResult);
+    }
+  }, [languageChanged]);
+
+  const handleLanguageChange = () => {
+    setLanguageChanged(prev => prev + 1);
+  };
 
   const pickImage = async (fromCamera = false) => {
     setSelectingImage(true);
@@ -120,7 +183,9 @@ const formData = new FormData();
           throw new Error(data.error || "Detection failed");
         }
         
-        setResult(data);
+        setOriginalResult(data);
+        const translatedData = await translateResults(data, i18n.locale);
+        setResult(translatedData);
       } catch (err) {
         if (err.name === 'AbortError') {
           Alert.alert(i18n.t('app.title'), i18n.t('alerts.timeout'));
@@ -158,7 +223,7 @@ const formData = new FormData();
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{i18n.t('app.title')}</Text>
-        <LanguageSelector />
+        <LanguageSelector onLanguageChange={handleLanguageChange} />
       </View>
       
       <ScrollView 
