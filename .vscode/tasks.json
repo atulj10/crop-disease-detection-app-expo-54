@@ -1,0 +1,90 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "OpenCode",
+      "type": "shell",
+      "command": "echo Scan the full repository recursively. Build understanding of architecture, services, APIs, and dependencies. When initialization is complete, reply READY | opencode",
+      "options": {
+        "shell": {
+          "executable": "cmd.exe",
+          "args": ["/c"]
+        }
+      },
+      "presentation": {
+        "panel": "new"
+      }
+    },
+    {
+      "label": "RAG API (uvicorn)",
+      "type": "shell",
+      "command": "cd .\\crop-disease-rag && venv\\Scripts\\activate && uvicorn app:app --reload",
+      "options": {
+        "shell": {
+          "executable": "cmd.exe",
+          "args": ["/c"]
+        }
+      },
+      "presentation": {
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Python App",
+      "type": "shell",
+      "command": "cd .\\crop-disease-python && venv310\\Scripts\\activate && python app.py",
+      "options": {
+        "shell": {
+          "executable": "cmd.exe",
+          "args": ["/c"]
+        }
+      },
+      "presentation": {
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Node Backend",
+      "type": "shell",
+      "command": "cd .\\crop-disease-js\\backend && node server.js",
+      "options": {
+        "shell": {
+          "executable": "cmd.exe",
+          "args": ["/c"]
+        }
+      },
+      "presentation": {
+        "panel": "new"
+      }
+    },
+    {
+      "label": "React Frontend",
+      "type": "shell",
+      "command": "cd .\\crop-disease-js\\frontend && npm start",
+      "options": {
+        "shell": {
+          "executable": "cmd.exe",
+          "args": ["/c"]
+        }
+      },
+      "presentation": {
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Start All Services",
+      "dependsOn": [
+        "OpenCode",
+        "RAG API (uvicorn)",
+        "Python App",
+        "Node Backend",
+        "React Frontend"
+      ],
+      "dependsOrder": "parallel",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
