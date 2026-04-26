@@ -24,6 +24,7 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [originalResult, setOriginalResult] = useState(null);
   const [languageChanged, setLanguageChanged] = useState(0);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const translateText = async (text, targetLang) => {
     if (targetLang === 'en' || !text) return text;
@@ -78,7 +79,10 @@ export default function App() {
 
   useEffect(() => {
     if (originalResult && languageChanged > 0) {
-      translateResults(originalResult, i18n.locale).then(setResult);
+      setIsTranslating(true);
+      translateResults(originalResult, i18n.locale).then(setResult).finally(() => {
+        setIsTranslating(false);
+      });
     }
   }, [languageChanged]);
 
@@ -184,6 +188,7 @@ const formData = new FormData();
         }
         
         setOriginalResult(data);
+        setIsTranslating(true);
         const translatedData = await translateResults(data, i18n.locale);
         setResult(translatedData);
       } catch (err) {
@@ -282,7 +287,24 @@ const formData = new FormData();
           )}
         </TouchableOpacity>
 
-        {result && (
+        {(isTranslating) && (
+          <View style={styles.resultBox}>
+            <View style={styles.skeleton}>
+              <View style={[styles.skeletonLine, { width: '40%' }]} />
+              <View style={[styles.skeletonLine, { width: '60%', marginTop: 8 }]} />
+              <View style={[styles.skeletonLine, { width: '30%', marginTop: 20 }]} />
+              <View style={[styles.skeletonLine, { width: '70%', marginTop: 8 }]} />
+              <View style={[styles.skeletonLine, { width: '50%', marginTop: 8 }]} />
+              <View style={[styles.skeletonLine, { width: '65%', marginTop: 8 }]} />
+              <View style={[styles.skeletonLine, { width: '55%', marginTop: 8 }]} />
+              <View style={[styles.skeletonLine, { width: '45%', marginTop: 20 }]} />
+              <View style={[styles.skeletonLine, { width: '80%', marginTop: 8 }]} />
+              <View style={[styles.skeletonLine, { width: '75%', marginTop: 8 }]} />
+            </View>
+          </View>
+        )}
+
+        {result && !isTranslating && (
           <View style={styles.resultBox}>
             <Text style={styles.resultTitle}>{i18n.t('results.plantCrop')}</Text>
             <Text style={styles.cropText}>{result.crop}</Text>
@@ -606,5 +628,15 @@ const styles = StyleSheet.create({
     color: "#6c757d",
     fontSize: 11,
     fontFamily: "monospace",
+  },
+  skeleton: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 12,
+  },
+  skeletonLine: {
+    height: 14,
+    backgroundColor: "#e9ecef",
+    borderRadius: 4,
   },
 });

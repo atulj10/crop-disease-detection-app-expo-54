@@ -170,19 +170,28 @@ Return ONLY valid JSON in this exact format, no markdown or explanations:
 
     const content = response.data.choices?.[0]?.message?.content;
     console.log(`✅ [Groq] Response received`);
-    console.log(`📋 [Groq] Raw response:`, content);
 
     if (content) {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        console.log(`📋 [Groq] Parsed result:`, JSON.stringify(parsed, null, 2));
-        return parsed;
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const cleanedContent = jsonMatch[0]
+            .replace(/[\u200B-\u200D\uFEFF]/g, '')
+            .replace(/,\s*,/g, ',')
+            .replace(/,\s*\]/g, ']')
+            .replace(/,\s*\}/g, '}');
+          
+          const parsed = JSON.parse(cleanedContent);
+          console.log(`📋 [Groq] Parsed result:`, JSON.stringify(parsed, null, 2));
+          return parsed;
+        }
+      } catch (parseErr) {
+        console.warn("⚠️ [Groq] JSON parse error:", parseErr.message);
       }
     }
 
     console.warn("⚠️ [Groq] Could not parse response, using fallback");
-    return fallbackCombine(ragContent, webResults, crop, disease, isHealthy);
+    return fallbackCombine(ragContent, webResults, crop, disease, isHealthy, targetLang);
 
   } catch (error) {
     console.error("❌ [Groq] Request failed:", error.message);
@@ -190,7 +199,7 @@ Return ONLY valid JSON in this exact format, no markdown or explanations:
       console.error("📋 [Groq] Status:", error.response.status);
       console.error("📋 [Groq] Response:", error.response.data);
     }
-    return fallbackCombine(ragContent, webResults, crop, disease, isHealthy);
+    return fallbackCombine(ragContent, webResults, crop, disease, isHealthy, targetLang);
   }
 }
 

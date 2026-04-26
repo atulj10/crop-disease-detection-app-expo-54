@@ -141,7 +141,7 @@ app.post("/detect-disease", upload.single("image"), async (req, res) => {
       crop,
       disease,
       isHealthy,
-      lang
+      targetLang
     );
     
     /* ===============================
