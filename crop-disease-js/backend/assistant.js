@@ -1,41 +1,39 @@
 import dotenv from "dotenv";
 import axios from "axios";
-import { Pinecone } from "@pinecone-database/pinecone";
 
 dotenv.config();
 
-const pc = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY,
-});
-
-const ASSISTANT_NAME = "crop-disease";
+const RAG_URL = process.env.RAG_SERVER_URL || "http://localhost:8000";
 
 async function similaritySearch(query) {
-  if (!process.env.PINECONE_API_KEY) {
-    console.warn("⚠️ Pinecone API key not configured");
-    return { success: false, content: null, error: "Pinecone not configured" };
-  }
-
   try {
-    console.log(`🔍 [Pinecone] Searching for: "${query}"`);
-    const assistant = pc.assistant({ name: ASSISTANT_NAME });
+    console.log(`🔍 [Local RAG] Searching for: "${query}"`);
     
-    const response = await assistant.chat({
-      messages: [{ role: "user", content: query }],
-      model: "gemini-2.5-pro",
-    });
+    const response = await axios.post(
+      `${RAG_URL}/search`,
+      {
+        query,
+        top_k: 3
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+        timeout: 30000
+      }
+    );
 
-    console.log(`✅ [Pinecone] Search completed`);
-    console.log(`📋 [Pinecone] Response:`, JSON.stringify(response, null, 2));
+    const results = response.data.results || [];
+    const content = results.map(r => r.text).join("\n\n");
+    
+    console.log(`✅ [Local RAG] Search completed, found ${results.length} results`);
+    console.log(`📋 [Local RAG] Content preview:`, content.substring(0, 200) + "...");
 
     return {
       success: true,
-      content: response,
+      content,
       error: null
     };
   } catch (error) {
-    console.error("❌ [Pinecone] Search failed:", error.message);
-    console.error("📋 [Pinecone] Error details:", error.response?.data || error);
+    console.error("❌ [Local RAG] Search failed:", error.message);
     return { success: false, content: null, error: error.message };
   }
 }

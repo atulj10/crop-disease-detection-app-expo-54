@@ -27,7 +27,7 @@ app.get("/health", (req, res) => {
     },
     services: {
       tavily: !!process.env.TAVILY_API_KEY,
-      pinecone: !!process.env.PINECONE_API_KEY,
+      rag: !!process.env.RAG_SERVER_URL,
       groq: !!process.env.GROQ_API_KEY
     }
   });
