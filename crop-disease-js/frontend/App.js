@@ -203,6 +203,7 @@ const formData = new FormData();
         setResult(null);
       } finally {
         setLoading(false);
+        setIsTranslating(false);
       }
     };
 
