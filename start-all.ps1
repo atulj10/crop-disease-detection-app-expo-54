@@ -1,0 +1,5 @@
+Start-Process powershell -ArgumentList 'cd .\crop-disease-rag; .\venv\Scripts\Activate.ps1; uvicorn app:app --reload'
+Start-Process powershell -ArgumentList 'cd .\crop-disease-python; .\venv310\Scripts\Activate.ps1; python app.py'
+Start-Process powershell -ArgumentList 'cd .\crop-disease-js\backend; node server.js'
+Start-Process powershell -ArgumentList 'cd .\crop-disease-js\frontend; npm start'
+Start-Process powershell -ArgumentList 'opencode'
