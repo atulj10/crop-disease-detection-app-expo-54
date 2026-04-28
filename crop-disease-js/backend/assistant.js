@@ -86,11 +86,6 @@ async function combineWithGroq(ragContent, webResults, crop, disease, isHealthy,
     return fallbackCombine(ragContent, webResults, crop, disease, isHealthy, lang);
   }
 
-  const langNames = {
-    en: 'English', hi: 'Hindi', mr: 'Marathi', te: 'Telugu'
-  };
-  const langName = langNames[lang] || 'English';
-
   try {
     const ragText = ragContent 
       ? (typeof ragContent === 'string' ? ragContent : JSON.stringify(ragContent, null, 2))
@@ -117,25 +112,25 @@ ${ragText}
 WEB SEARCH RESULTS:
 ${webText}
 
-TASK: Combine the RAG knowledge and web search results into a comprehensive response in ${langName} language (lang code: ${lang}):
+TASK: Combine the RAG knowledge and web search results into a comprehensive response in English:
 1. description - Brief explanation of the condition (2-3 sentences)
 2. treatment - Specific treatment steps (if diseased) or care tips (if healthy)
 3. prevention - Prevention measures to avoid spread or recurrence
 4. recommended_products - 3 specific product recommendations with purchase links from Flipkart, local agricultural stores, or plant care websites (AVOID Amazon)
-5. articles - 2-3 educational resources for further reading in ${langName}
+5. articles - 2-3 educational resources for further reading
 
 IMPORTANT:
-- Respond ALL content in ${langName}
+- Respond ALL content in English only
 - Do NOT include Amazon links in recommended_products
 - Use Flipkart, local agricultural websites, or plant care e-commerce sites instead
 
 Return ONLY valid JSON in this exact format, no markdown or explanations:
 {
-  "description": "string (in ${langName})",
-  "treatment": ["string", "string", "string"] (all in ${langName}),
-  "prevention": ["string", "string", "string"] (all in ${langName}),
+  "description": "string (in English)",
+  "treatment": ["string", "string", "string"] (all in English),
+  "prevention": ["string", "string", "string"] (all in English),
   "recommended_products": [{"title": "string", "url": "string"}] (AVOID Amazon links),
-  "articles": [{"title": "string", "url": "string"}] (in ${langName})
+  "articles": [{"title": "string", "url": "string"}]
 }`;
 
     console.log(`🤖 [Groq] Sending request to Llama 3.1...`);
@@ -189,7 +184,7 @@ Return ONLY valid JSON in this exact format, no markdown or explanations:
     }
 
     console.warn("⚠️ [Groq] Could not parse response, using fallback");
-    return fallbackCombine(ragContent, webResults, crop, disease, isHealthy, targetLang);
+    return fallbackCombine(ragContent, webResults, crop, disease, isHealthy, lang);
 
   } catch (error) {
     console.error("❌ [Groq] Request failed:", error.message);
@@ -197,7 +192,7 @@ Return ONLY valid JSON in this exact format, no markdown or explanations:
       console.error("📋 [Groq] Status:", error.response.status);
       console.error("📋 [Groq] Response:", error.response.data);
     }
-    return fallbackCombine(ragContent, webResults, crop, disease, isHealthy, targetLang);
+    return fallbackCombine(ragContent, webResults, crop, disease, isHealthy, lang);
   }
 }
 

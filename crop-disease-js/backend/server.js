@@ -103,17 +103,9 @@ app.post("/detect-disease", upload.single("image"), async (req, res) => {
     /* ===============================
        3️⃣ Search web for products and articles
        =============================== */
-    const langMap = {
-      'hi': 'Hindi',
-      'mr': 'Marathi',
-      'te': 'Telugu',
-      'en': 'English'
-    };
-    const langName = langMap[targetLang] || 'English';
-    
     const webQuery = isHealthy 
-      ? `best fertilizers growth promoters for ${crop} plants ${langName} Amazon Flipkart India`
-      : `best fungicides treatments for ${disease} in ${crop} plants ${langName} Amazon Flipkart India`;
+      ? `best fertilizers growth promoters for ${crop} plants English Amazon Flipkart India`
+      : `best fungicides treatments for ${disease} in ${crop} plants English Amazon Flipkart India`;
     
     console.log("🔍 Searching web for products and articles...");
     const webResults = await searchWeb(webQuery);
