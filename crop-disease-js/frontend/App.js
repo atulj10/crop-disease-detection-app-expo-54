@@ -223,6 +223,7 @@ const formData = new FormData();
   const clearResults = () => {
     setImage(null);
     setResult(null);
+    setOriginalResult(null);
   };
 
   return (

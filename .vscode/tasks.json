@@ -4,41 +4,38 @@
     {
       "label": "OpenCode",
       "type": "shell",
-      "command": "echo Scan the full repository recursively. Build understanding of architecture, services, APIs, and dependencies. When initialization is complete, reply READY | opencode",
-      "options": {
-        "shell": {
-          "executable": "cmd.exe",
-          "args": ["/c"]
-        }
-      },
+      "command": "powershell",
+      "args": [
+        "-NoExit",
+        "-Command",
+        "opencode"
+      ],
       "presentation": {
         "panel": "new"
       }
     },
     {
-      "label": "RAG API (uvicorn)",
+      "label": "RAG Server",
       "type": "shell",
-      "command": "cd .\\crop-disease-rag && venv\\Scripts\\activate && uvicorn app:app --reload",
-      "options": {
-        "shell": {
-          "executable": "cmd.exe",
-          "args": ["/c"]
-        }
-      },
+      "command": "powershell",
+      "args": [
+        "-NoExit",
+        "-Command",
+        "cd .\\crop-disease-rag; .\\venv\\Scripts\\Activate.ps1; uvicorn app:app --reload"
+      ],
       "presentation": {
         "panel": "new"
       }
     },
     {
-      "label": "Python App",
+      "label": "Python API",
       "type": "shell",
-      "command": "cd .\\crop-disease-python && venv310\\Scripts\\activate && python app.py",
-      "options": {
-        "shell": {
-          "executable": "cmd.exe",
-          "args": ["/c"]
-        }
-      },
+      "command": "powershell",
+      "args": [
+        "-NoExit",
+        "-Command",
+        "cd .\\crop-disease-python; .\\venv310\\Scripts\\Activate.ps1; python app.py"
+      ],
       "presentation": {
         "panel": "new"
       }
@@ -46,13 +43,12 @@
     {
       "label": "Node Backend",
       "type": "shell",
-      "command": "cd .\\crop-disease-js\\backend && node server.js",
-      "options": {
-        "shell": {
-          "executable": "cmd.exe",
-          "args": ["/c"]
-        }
-      },
+      "command": "powershell",
+      "args": [
+        "-NoExit",
+        "-Command",
+        "cd .\\crop-disease-js\\backend; node server.js"
+      ],
       "presentation": {
         "panel": "new"
       }
@@ -60,31 +56,27 @@
     {
       "label": "React Frontend",
       "type": "shell",
-      "command": "cd .\\crop-disease-js\\frontend && npm start",
-      "options": {
-        "shell": {
-          "executable": "cmd.exe",
-          "args": ["/c"]
-        }
-      },
+      "command": "powershell",
+      "args": [
+        "-NoExit",
+        "-Command",
+        "cd .\\crop-disease-js\\frontend; npm start"
+      ],
       "presentation": {
         "panel": "new"
       }
     },
+
     {
-      "label": "Start All Services",
+      "label": "Start All Servers",
       "dependsOn": [
-        "OpenCode",
-        "RAG API (uvicorn)",
-        "Python App",
+        "RAG Server",
+        "Python API",
         "Node Backend",
-        "React Frontend"
+        "React Frontend",
+        "OpenCode"
       ],
-      "dependsOrder": "parallel",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
+      "dependsOrder": "parallel"
     }
   ]
 }
